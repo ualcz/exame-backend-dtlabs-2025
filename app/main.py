@@ -8,7 +8,7 @@ from app.models.models import Base
 Base.metadata.create_all(bind=engine)
 
 # FastAPI App
-app = FastAPI(title="IoT Backend API", version="1.0.0")
+app = FastAPI(title="IoT Backend API", version="0.0.1")
 
 # Include routers
 app.include_router(auth.router)

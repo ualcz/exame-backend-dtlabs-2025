@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, field_validator, Field, ValidationInfo
 
 # Pydantic models
 class Token(BaseModel):
@@ -51,12 +51,12 @@ class ServerResponse(BaseModel):
 class SensorDataPost(BaseModel):
     server_ulid: str
     timestamp: datetime
-    temperature: Optional[float] = None
-    humidity: Optional[float] = None
-    voltage: Optional[float] = None
-    current: Optional[float] = None
+    temperature: Optional[float] =  Field(default = None, validate_default=True)
+    humidity: Optional[float] =  Field(default = None, validate_default=True)
+    voltage: Optional[float] =  Field(default = None, validate_default=True)
+    current: Optional[float] =  Field(default = None, validate_default=True)
     
-    @validator('timestamp')
+    @field_validator('timestamp')
     def check_timestamp_format(cls, v):
         # Ensure timestamp is in ISO 8601 format
         if not isinstance(v, datetime):
@@ -66,21 +66,21 @@ class SensorDataPost(BaseModel):
                 raise ValueError('Timestamp must be in ISO 8601 format')
         return v
     
-    @validator('humidity')
+    @field_validator('humidity')
     def check_humidity_range(cls, v):
         if v is not None and (v < 0 or v > 100):
             raise ValueError('Humidity must be between 0 and 100')
         return v
     
-    @validator('server_ulid', 'timestamp')
-    def check_required_fields(cls, v, values):
+    @field_validator('server_ulid', 'timestamp')
+    def check_required_fields(cls, v):
         if v is None:
             raise ValueError('This field is required')
         return v
     
-    @validator('temperature', 'humidity', 'voltage', 'current', pre=True, always=True)
-    def check_at_least_one_sensor(cls, v, values):
-        if v is None and all(values.get(field) is None for field in ['temperature', 'humidity', 'voltage', 'current']):
+    @field_validator('temperature', 'humidity', 'voltage', 'current')
+    def check_at_least_one_sensor(cls, v, info: ValidationInfo) -> str:
+        if v is None and all(info.data.get(field) is None for field in ['temperature', 'humidity', 'voltage', 'current']):
             raise ValueError('At least one sensor value must be provided')
         return v
 

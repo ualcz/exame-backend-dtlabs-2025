@@ -86,6 +86,11 @@ def get_auth_token(client):
     return response.json()["access_token"]
 
 
+# Test authentication failure
+def test_authentication_required(client):
+    response = client.get("/data")  # Tentativa sem token
+    assert response.status_code == 401
+
 # Test user registration
 def test_register_user(client):
     response = client.post(
@@ -200,6 +205,18 @@ def test_get_sensor_data(client):
     assert "temperature" in data[0]
 
 
+def test_invalid_timestamp_format(client):
+    response = client.post(
+        "/data",
+        json={
+            "server_ulid": "01HQNJ4RT8Z6MSPMTC83WTPQTA",
+            "timestamp": "invalid-timestamp",
+            "temperature": 22.5
+        }
+    )
+    assert response.status_code == 422
+
+
 # Test all servers health endpoint
 def test_all_servers_health(client):
     token = get_auth_token(client)
@@ -248,3 +265,4 @@ def test_server_health(client):
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "offline"
+
