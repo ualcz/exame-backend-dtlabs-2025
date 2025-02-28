@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: iot_backend_api
+    ports:
+      - "8000:8000"  # Expose the FastAPI app on port 8000
+    environment:
+      - DATABASE_URL=postgresql://neondb_owner:npg_hOBaysAmu63w@postgres:5432/neondb?sslmode=require
+      - SECRET_KEY=your-secret-key
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+    depends_on:
+      - postgres
+    volumes:
+      - .:/app
+    networks:
+      - iot_network
+  
+  postgres:
+    image: postgres:13
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: neondb_owner
+      POSTGRES_PASSWORD: npg_hOBaysAmu63w
+      POSTGRES_DB: neondb
+    ports:
+      - "5432:5432"
+    networks:
+      - iot_network
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
+networks:
+  iot_network:
+    driver: bridge
