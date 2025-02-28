@@ -1,6 +1,3 @@
-Here's the updated `README.md` in English, including instructions on setting up a virtual environment and testing the API with `pytest`:
-
----
 
 # IoT Backend API
 
