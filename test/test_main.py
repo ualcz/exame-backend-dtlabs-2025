@@ -3,7 +3,7 @@ import time
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 
 from app.main import app, Base
 from app.database import get_db
@@ -38,14 +38,14 @@ def test_db():
         server_ulid="01HQNJ4RT8Z6MSPMTC83WTPQTA",
         server_name="Test Server",
         owner_id="01HQNJ3P8TMRZ5QPBHF3GPTVWH",
-        last_seen=datetime.now(timezone.utc)
+        last_seen=datetime.now()
     )
     
     offline_server = DBServer(
         server_ulid="01HQNJ5WF7Q24KPJDVA0SXMHBR",
         server_name="Offline Server",
         owner_id="01HQNJ3P8TMRZ5QPBHF3GPTVWH",
-        last_seen=datetime.now(timezone.utc) - timedelta(seconds=15)
+        last_seen=datetime.now() - timedelta(seconds=15)
     )
     
     db.add(test_user)
@@ -137,7 +137,7 @@ def test_post_sensor_data(client):
         "/data",
         json={
             "server_ulid": "01HQNJ4RT8Z6MSPMTC83WTPQTA",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now().isoformat(),
             "temperature": 25.5,
             "humidity": 60.0
         }
@@ -152,7 +152,7 @@ def test_post_sensor_data_server_not_found(client):
         "/data",
         json={
             "server_ulid": "NONEXISTENT",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now().isoformat(),
             "temperature": 25.5
         }
     )
@@ -166,7 +166,7 @@ def test_post_sensor_data_no_sensors(client):
         "/data",
         json={
             "server_ulid": "01HQNJ4RT8Z6MSPMTC83WTPQTA",
-            "timestamp": datetime.now(timezone.utc).isoformat()
+            "timestamp": datetime.now().isoformat()
         }
     )
     assert response.status_code == 422
@@ -179,7 +179,7 @@ def test_get_sensor_data(client):
         "/data",
         json={
             "server_ulid": "01HQNJ4RT8Z6MSPMTC83WTPQTA",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now().isoformat(),
             "temperature": 25.5,
             "humidity": 60.0
         }
@@ -204,7 +204,7 @@ def test_get_sensor_data(client):
 def test_all_servers_health(client):
     token = get_auth_token(client)
     response = client.get(
-        "/health/all",
+        "/health/all", 
         headers={"Authorization": f"Bearer {token}"}
     )
     assert response.status_code == 200

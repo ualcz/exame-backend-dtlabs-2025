@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"  # Expose the FastAPI app on port 8000
     environment:
-      - DATABASE_URL=postgresql://neondb_owner:npg_hOBaysAmu63w@postgres:5432/neondb?sslmode=require
+      - DATABASE_URL=postgresql://clau:c123456@localhost:5432/dtlabs?sslmode=disable
       - SECRET_KEY=your-secret-key
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
     depends_on:
@@ -21,9 +21,9 @@ services:
     image: postgres:13
     container_name: postgres_db
     environment:
-      POSTGRES_USER: neondb_owner
-      POSTGRES_PASSWORD: npg_hOBaysAmu63w
-      POSTGRES_DB: neondb
+      POSTGRES_USER: clau
+      POSTGRES_PASSWORD: c123456
+      POSTGRES_DB: dtlabs
     ports:
       - "5432:5432"
     networks:

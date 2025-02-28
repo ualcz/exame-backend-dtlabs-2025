@@ -37,6 +37,31 @@ async def create_server(
     )
 
 
+@router.get("/health/all", response_model=List[ServerResponse])
+async def get_all_servers_health(
+    current_user: Annotated[DBUser, Depends(get_current_active_user)],
+    db: Session = Depends(get_db)
+):
+    servers = db.query(DBServer).filter(DBServer.owner_id == current_user.id).all()
+    
+    # Server is considered offline if no data for 10 seconds
+    time_threshold = datetime.now() - timedelta(seconds=10)
+    
+    result = []
+    for server in servers:
+        status = "online" if server.last_seen and server.last_seen >= time_threshold else "offline"
+        result.append(
+            ServerResponse(
+                server_ulid=server.server_ulid,
+                server_name=server.server_name,
+                status=status
+            )
+        )
+    
+    return result
+
+
+
 @router.get("/health/{server_ulid}", response_model=ServerResponse)
 async def get_server_health(
     server_ulid: str,
@@ -64,26 +89,3 @@ async def get_server_health(
         status=status
     )
 
-
-@router.get("/health/all", response_model=List[ServerResponse])
-async def get_all_servers_health(
-    current_user: Annotated[DBUser, Depends(get_current_active_user)],
-    db: Session = Depends(get_db)
-):
-    servers = db.query(DBServer).filter(DBServer.owner_id == current_user.id).all()
-    
-    # Server is considered offline if no data for 10 seconds
-    time_threshold = datetime.now() - timedelta(seconds=10)
-    
-    result = []
-    for server in servers:
-        status = "online" if server.last_seen and server.last_seen >= time_threshold else "offline"
-        result.append(
-            ServerResponse(
-                server_ulid=server.server_ulid,
-                server_name=server.server_name,
-                status=status
-            )
-        )
-    
-    return result

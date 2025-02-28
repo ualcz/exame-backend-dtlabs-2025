@@ -19,7 +19,7 @@ class User(BaseModel):
     full_name: Optional[str] = None
     disabled: Optional[bool] = None
     
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
@@ -44,7 +44,7 @@ class ServerResponse(BaseModel):
     server_name: str
     status: str
     
-    class Config:
+    class ConfigDict:
         from_attributes = True
 
 
@@ -92,5 +92,5 @@ class SensorDataResponse(BaseModel):
     voltage: Optional[float] = None
     current: Optional[float] = None
     
-    class Config:
+    class ConfigDict:
         from_attributes = True
