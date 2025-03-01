@@ -62,15 +62,6 @@ source venv/bin/activate
 # On Windows
 venv\Scripts\activate
 ```
-
-### Install Test Dependencies
-
-With the virtual environment activated, install the necessary dependencies to run the tests, which are listed in the `requirements.txt`. Alternatively, you can manually install `pytest` for testing:
-
-```bash
-pip install -r requirements.txt
-```
-
 ### Running the Tests
 
 You can run the tests by executing the `pytest` command directly. Here's how to run the API tests:
