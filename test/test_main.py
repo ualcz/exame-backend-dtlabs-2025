@@ -4,7 +4,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from datetime import datetime, timedelta
-
+import os
 from app.main import app, Base
 from app.database import get_db
 from app.security.auth import get_password_hash 
@@ -12,7 +12,8 @@ from app.models.models import DBUser, DBServer
 import uuid
 
 # Test database
-SQLALCHEMY_DATABASE_URL = "postgresql://clau:c123456@localhost:5432/dtlabs?sslmode=disable"
+
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL")
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
