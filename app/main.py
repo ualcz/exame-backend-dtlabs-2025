@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.api import auth, servers, sensor_data
+from app.routes import auth, servers, sensor_data
 from app.database import engine
 from app.models.models import Base
 
