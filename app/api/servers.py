@@ -18,7 +18,7 @@ async def create_server(
     current_user: Annotated[DBUser, Depends(get_current_active_user)],
     db: Session = Depends(get_db)
 ):
-    server_ulid = str(ulid)
+    server_ulid = str(ulid())
     db_server = DBServer(
         server_ulid=server_ulid,
         server_name=server.server_name,

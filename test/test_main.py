@@ -9,9 +9,10 @@ from app.main import app, Base
 from app.database import get_db
 from app.security.auth import get_password_hash 
 from app.models.models import DBUser, DBServer
+import uuid
 
 # Test database
-SQLALCHEMY_DATABASE_URL = "postgresql://neondb_owner:npg_hOBaysAmu63w@ep-green-dawn-a5qt2yg1-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require"
+SQLALCHEMY_DATABASE_URL = "postgresql://clau:c123456@localhost:5432/dtlabs?sslmode=disable"
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -266,3 +267,168 @@ def test_server_health(client):
     data = response.json()
     assert data["status"] == "offline"
 
+
+# Test GET /data with server_ulid filter
+def test_get_sensor_data_by_server(client):
+    token = get_auth_token(client)
+    
+    # First post some test data for different servers
+    server_id = "01HQNJ4RT8Z6MSPMTC83WTPQTA"
+    
+    # Post data for the first server
+    client.post(
+        "/data",
+        json={
+            "server_ulid": server_id,
+            "timestamp": datetime.now().isoformat(),
+            "temperature": 25.5,
+            "humidity": 60.0
+        }
+    )
+    
+    # Get the data filtered by server_ulid
+    response = client.get(
+        f"/data?server_ulid={server_id}",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) > 0
+
+
+
+# Test GET /data with time range filter
+def test_get_sensor_data_by_time_range(client):
+    token = get_auth_token(client)
+    
+    # Create timestamps for our test
+    now = datetime.now()
+    start_time = (now - timedelta(hours=1)).isoformat()
+    mid_time = now.isoformat()
+    end_time = (now + timedelta(hours=1)).isoformat()
+    
+    # Post data with timestamp in the middle of our range
+    client.post(
+        "/data",
+        json={
+            "server_ulid": "01HQNJ4RT8Z6MSPMTC83WTPQTA",
+            "timestamp": mid_time,
+            "temperature": 25.5
+        }
+    )
+    
+    # Get data within time range
+    response = client.get(
+        f"/data?start_time={start_time}&end_time={end_time}",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+
+# Test GET /data with sensor_type filter
+def test_get_sensor_data_by_sensor_type(client):
+    token = get_auth_token(client)
+    
+    # Post data with multiple sensor types
+    client.post(
+        "/data",
+        json={
+            "server_ulid": "01HQNJ4RT8Z6MSPMTC83WTPQTA",
+            "timestamp": datetime.now().isoformat(),
+            "temperature": 25.5,
+            "humidity": 60.0,
+            "voltage": 220.0,
+            "current": 1.5
+        }
+    )
+    
+    # Test each sensor type individually
+    sensor_types = ["temperature", "humidity", "voltage", "current"]
+    
+    for sensor in sensor_types:
+        response = client.get(
+            f"/data?sensor_type={sensor}",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        
+        assert response.status_code == 200
+        data = response.json()
+        assert isinstance(data, list)
+
+
+# Test combining multiple filters
+def test_get_sensor_data_with_combined_filters(client):
+    token = get_auth_token(client)
+    
+    # Use a specific server and time range
+    server_id = "01HQNJ4RT8Z6MSPMTC83WTPQTA"
+    now = datetime.now()
+    start_time = (now - timedelta(hours=1)).isoformat()
+    end_time = (now + timedelta(hours=1)).isoformat()
+    
+    # Post test data
+    client.post(
+        "/data",
+        json={
+            "server_ulid": server_id,
+            "timestamp": now.isoformat(),
+            "temperature": 25.5,
+            "humidity": 60.0
+        }
+    )
+    
+    # Get data with combined filters
+    response = client.get(
+        f"/data?server_ulid={server_id}&start_time={start_time}&end_time={end_time}&sensor_type=temperature",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+
+
+# Test invalid parameters
+def test_get_sensor_data_with_invalid_parameters(client):
+    token = get_auth_token(client)
+    
+    # Test invalid aggregation parameter
+    response = client.get(
+        "/data?aggregation=invalid",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code in [400, 422]
+    
+    # Test invalid date format
+    response = client.get(
+        "/data?start_time=invalid-date",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code in [400, 422]
+    
+    # Test invalid sensor type
+    response = client.get(
+        "/data?sensor_type=invalid_sensor",
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code in [400, 422]
+
+
+# Additional test for server registration with unique name
+def test_create_server_with_unique_name(client):
+    token = get_auth_token(client)
+    
+    unique_name = f"Server {uuid.uuid4()}"
+    
+    response = client.post(
+        "/servers",
+        json={"server_name": unique_name},
+        headers={"Authorization": f"Bearer {token}"}
+    )
+    assert response.status_code == 200
+    assert response.json()["server_name"] == unique_name

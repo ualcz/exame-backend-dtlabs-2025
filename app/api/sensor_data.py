@@ -26,7 +26,7 @@ async def post_sensor_data(data: SensorDataPost, db: Session = Depends(get_db)):
     
     # Create sensor data entry
     db_sensor_data = DBSensorData(
-        id=str(ulid),
+        id=str(ulid()),
         server_ulid=data.server_ulid,
         timestamp=data.timestamp,
         temperature=data.temperature,
